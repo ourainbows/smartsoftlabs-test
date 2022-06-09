@@ -1,10 +1,14 @@
 import * as fs from "fs";
 import * as path from "path";
 import { parse } from "csv-parse";
+
 import { ProvinceState, ProvinceStateDTO } from "./models/provinceState";
 
-let data: any[] = [];
-
+/* 
+    Function to group data by province
+    @param data: any -> response from csv-parse
+    @returns: ProvinceState[] -> array of ProvinceState 
+*/
 const groupedByProvince = (data: any[]): ProvinceState[] => {
   const dataGrouped: ProvinceState[] = [];
 
@@ -32,6 +36,11 @@ const groupedByProvince = (data: any[]): ProvinceState[] => {
   return dataGrouped;
 };
 
+/* 
+    Fucntion to get the state with most deaths
+    @param data: ProvinceState[] -> array of ProvinceState
+    @returns: ProvinceState -> ProvinceState with most deaths
+ */
 const stateWithMostDeaths = (data: ProvinceState[]): ProvinceState => {
   const mostDeaths = data.reduce((prev, current) =>
     prev.accumulatedDeaths > current.accumulatedDeaths ? prev : current
@@ -39,6 +48,11 @@ const stateWithMostDeaths = (data: ProvinceState[]): ProvinceState => {
   return mostDeaths;
 };
 
+/* 
+    Function to get the state with least deaths
+    @param data: ProvinceState[] -> array of ProvinceState
+    @returns: ProvinceState -> ProvinceState with least deaths
+ */
 const stateWithLeastDeaths = (data: ProvinceState[]): ProvinceState => {
   const leastDeaths = data.reduce((prev, current) =>
     prev.accumulatedDeaths < current.accumulatedDeaths ? prev : current
@@ -46,6 +60,11 @@ const stateWithLeastDeaths = (data: ProvinceState[]): ProvinceState => {
   return leastDeaths;
 };
 
+/* 
+    Function to get the percentage of deaths per person
+    @param data: ProvinceState[] -> array of ProvinceState
+    @returns: ProvinceStateDTO[] -> array of ProvinceStateDTO
+ */
 const percentageVsPopulation = (data: ProvinceState[]): ProvinceStateDTO[] => {
   const percentageData: ProvinceStateDTO[] = [];
   data.forEach((item) => {
@@ -61,6 +80,11 @@ const percentageVsPopulation = (data: ProvinceState[]): ProvinceStateDTO[] => {
   return percentageData;
 };
 
+/* 
+    Function to get the state with more percentage of deaths
+    @param data: ProvinceStateDTO[] -> array of ProvinceStateDTO
+    @returns: ProvinceStateDTO -> ProvinceStateDTO with more deaths
+ */
 const mostAffectedState = (data: ProvinceStateDTO[]): ProvinceState => {
   const mostAffected = data.reduce((prev, current) =>
     prev.deathsPercentage > current.deathsPercentage ? prev : current
@@ -68,7 +92,12 @@ const mostAffectedState = (data: ProvinceStateDTO[]): ProvinceState => {
   return mostAffected;
 };
 
+/* 
+    Initialize the program
+*/
 const init = (): void => {
+    
+  // Read the file and parse it
   (() => {
     const csvFilePath = path.resolve(
       __dirname,
@@ -100,11 +129,15 @@ const init = (): void => {
           console.error(error);
         }
 
+        // Call the functions
+
         const data = groupedByProvince(response);
         const mostDeaths = stateWithMostDeaths(data);
         const leastDeaths = stateWithLeastDeaths(data);
         const percentageData = percentageVsPopulation(data);
         const mostAffected = mostAffectedState(percentageData);
+
+        // Print the results
 
         console.log(
           `1. El estado con más muertes hasta la fecha es ${mostDeaths.province}\n`
