@@ -8,7 +8,7 @@ const groupedByProvince = (data: any[]): ProvinceState[] => {
 
   data.forEach((item) => {
     const provinceName = item.Province_State;
-    const poblation = item.Population;
+    const population = item.Population;
     const accumulatedDeaths = item["4/27/21"];
 
     const province: ProvinceState | undefined = dataGrouped.find(
@@ -17,12 +17,12 @@ const groupedByProvince = (data: any[]): ProvinceState[] => {
 
     if (province) {
       province.accumulatedDeaths += accumulatedDeaths;
-      province.population += poblation;
+      province.population += population;
     } else {
       dataGrouped.push({
         province: provinceName,
         accumulatedDeaths,
-        population: poblation,
+        population,
       });
     }
   });
@@ -42,6 +42,18 @@ const stateWithLeastDeaths = (data: ProvinceState[]): ProvinceState => {
     prev.accumulatedDeaths < current.accumulatedDeaths ? prev : current
   );
   return leastDeaths;
+};
+
+const percentageVsPopulation = (data: ProvinceState[]): ProvinceState[] => {
+  const percentageData: ProvinceState[] = [];
+  data.forEach((item) => {
+    const deathsPercentage = (item.accumulatedDeaths / item.population) * 100;
+    percentageData.push({
+      ...item,
+      deathsPercentage,
+    });
+  });
+  return percentageData;
 };
 
 (() => {
