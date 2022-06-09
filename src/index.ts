@@ -3,6 +3,8 @@ import * as path from "path";
 import { parse } from "csv-parse";
 import { ProvinceState, ProvinceStateDTO } from "./models/provinceState";
 
+let data: any[] = [];
+
 const groupedByProvince = (data: any[]): ProvinceState[] => {
   const dataGrouped: ProvinceState[] = [];
 
@@ -66,41 +68,62 @@ const mostAffectedState = (data: ProvinceStateDTO[]): ProvinceState => {
   return mostAffected;
 };
 
-const getDataByCsv = () => {
-  const csvFilePath = path.resolve(
-    __dirname,
-    "assets/time_series_covid19_deaths_US.csv"
-  );
+const init = (): void => {
+  (() => {
+    const csvFilePath = path.resolve(
+      __dirname,
+      "assets/time_series_covid19_deaths_US.csv"
+    );
 
-  const fileContent = fs.readFileSync(csvFilePath, { encoding: "utf-8" });
+    const fileContent = fs.readFileSync(csvFilePath, {
+      encoding: "utf-8",
+    });
 
-  parse(
-    fileContent,
-    {
-      delimiter: ",",
-      columns: true,
-      cast: (columnValue, context) => {
-        if (context.column === "Population") {
-          return parseInt(columnValue);
-        }
-        if (context.column === "4/27/21") {
-          return parseInt(columnValue);
-        }
+    parse(
+      fileContent,
+      {
+        delimiter: ",",
+        columns: true,
+        cast: (columnValue, context) => {
+          if (context.column === "Population") {
+            return parseInt(columnValue);
+          }
+          if (context.column === "4/27/21") {
+            return parseInt(columnValue);
+          }
 
-        return columnValue;
+          return columnValue;
+        },
       },
-    },
-    (error, result: any) => {
-      if (error) {
-        console.error(error);
+      (error, response: any) => {
+        if (error) {
+          console.error(error);
+        }
+
+        const data = groupedByProvince(response);
+        const mostDeaths = stateWithMostDeaths(data);
+        const leastDeaths = stateWithLeastDeaths(data);
+        const percentageData = percentageVsPopulation(data);
+        const mostAffected = mostAffectedState(percentageData);
+
+        console.log(
+          `1. El estado con más muertes hasta la fecha es ${mostDeaths.province}\n`
+        );
+        console.log(
+          `2. El estado con menos muertes hasta la fecha es ${leastDeaths.province}\n`
+        );
+        console.log(`3. Porcentaje de muertes por cada habitante\n`);
+        percentageData.forEach((item) => {
+          console.log(
+            `${item.province} tiene un ${item.deathsPercentage}% de muertes`
+          );
+        });
+        console.log(
+          `\n4. El estado con más muertes es ${mostAffected.province}\n`
+        );
       }
-
-      const grouped = groupedByProvince(result);
-
-      const mostDeaths = stateWithMostDeaths(grouped);
-      const leastDeaths = stateWithLeastDeaths(grouped);
-      const percentageData = percentageVsPopulation(grouped);
-      const mostAffected = mostAffectedState(percentageData);
-    }
-  );
+    );
+  })();
 };
+
+init();
