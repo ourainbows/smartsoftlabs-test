@@ -2,5 +2,8 @@ export interface ProvinceState {
   province: string;
   population: number;
   accumulatedDeaths: number;
-  deathsPercentage?: number;
+}
+
+export interface ProvinceStateDTO extends ProvinceState {
+  deathsPercentage: number;
 }

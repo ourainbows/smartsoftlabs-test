@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { parse } from "csv-parse";
-import { ProvinceState } from "./models/provinceState";
+import { ProvinceState, ProvinceStateDTO } from "./models/provinceState";
 
 const groupedByProvince = (data: any[]): ProvinceState[] => {
   const dataGrouped: ProvinceState[] = [];
@@ -44,10 +44,13 @@ const stateWithLeastDeaths = (data: ProvinceState[]): ProvinceState => {
   return leastDeaths;
 };
 
-const percentageVsPopulation = (data: ProvinceState[]): ProvinceState[] => {
-  const percentageData: ProvinceState[] = [];
+const percentageVsPopulation = (data: ProvinceState[]): ProvinceStateDTO[] => {
+  const percentageData: ProvinceStateDTO[] = [];
   data.forEach((item) => {
-    const deathsPercentage = (item.accumulatedDeaths / item.population) * 100;
+    const deathsPercentage = item.population
+      ? (item.accumulatedDeaths / item.population) * 100
+      : 0;
+
     percentageData.push({
       ...item,
       deathsPercentage,
@@ -56,7 +59,14 @@ const percentageVsPopulation = (data: ProvinceState[]): ProvinceState[] => {
   return percentageData;
 };
 
-(() => {
+const mostAffectedState = (data: ProvinceStateDTO[]): ProvinceState => {
+  const mostAffected = data.reduce((prev, current) =>
+    prev.deathsPercentage > current.deathsPercentage ? prev : current
+  );
+  return mostAffected;
+};
+
+const getDataByCsv = () => {
   const csvFilePath = path.resolve(
     __dirname,
     "assets/time_series_covid19_deaths_US.csv"
@@ -89,6 +99,8 @@ const percentageVsPopulation = (data: ProvinceState[]): ProvinceState[] => {
 
       const mostDeaths = stateWithMostDeaths(grouped);
       const leastDeaths = stateWithLeastDeaths(grouped);
+      const percentageData = percentageVsPopulation(grouped);
+      const mostAffected = mostAffectedState(percentageData);
     }
   );
-})();
+};
