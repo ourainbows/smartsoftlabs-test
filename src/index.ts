@@ -1,31 +1,47 @@
 import * as fs from "fs";
 import * as path from "path";
 import { parse } from "csv-parse";
+import { ProvinceState } from "./models/provinceState";
 
-interface ProvinceState {
-  name: string;
-  population: number;
-  accumulatedDeaths: number;
+const groupedByProvince = (data: any[]): ProvinceState[] => {
+  const dataGrouped: ProvinceState[] = [];
+
+  data.forEach((item) => {
+    const provinceName = item.Province_State;
+    const poblation = item.Population;
+    const accumulatedDeaths = item["4/27/21"];
+
+    const province: ProvinceState | undefined = dataGrouped.find(
+      (state) => state.province === provinceName
+    );
+
+    if (province) {
+      province.accumulatedDeaths += accumulatedDeaths;
+      province.population += poblation;
+    } else {
+      dataGrouped.push({
+        province: provinceName,
+        accumulatedDeaths,
+        population: poblation,
+      });
+    }
+  });
+
+  return dataGrouped;
 };
 
-const groupedByProvince = (data: any): ProvinceState[] => {
-  const grouped: ProvinceState[] = data.reduce((acc: ProvinceState[], curr: any) => {
-    const province = curr.Province_State;
-    const population = curr.Population;
-    const deaths = curr["4/27/21"];
-    if (acc[province]) {
-      acc[province].population += population;
-      acc[province].accumulatedDeaths += deaths;
-    } else {
-      acc[province] = {
-        name: province,
-        population: population,
-        accumulatedDeaths: deaths,
-      };
-    }
-    return acc;
-  });
-  return grouped;
+const stateWithMostDeaths = (data: ProvinceState[]): ProvinceState => {
+  const mostDeaths = data.reduce((prev, current) =>
+    prev.accumulatedDeaths > current.accumulatedDeaths ? prev : current
+  );
+  return mostDeaths;
+};
+
+const stateWithLeastDeaths = (data: ProvinceState[]): ProvinceState => {
+  const leastDeaths = data.reduce((prev, current) =>
+    prev.accumulatedDeaths < current.accumulatedDeaths ? prev : current
+  );
+  return leastDeaths;
 };
 
 (() => {
@@ -33,8 +49,6 @@ const groupedByProvince = (data: any): ProvinceState[] => {
     __dirname,
     "assets/time_series_covid19_deaths_US.csv"
   );
-
-  //const headers = ["Province_State", "Population", "4/27/21"];
 
   const fileContent = fs.readFileSync(csvFilePath, { encoding: "utf-8" });
 
@@ -60,7 +74,9 @@ const groupedByProvince = (data: any): ProvinceState[] => {
       }
 
       const grouped = groupedByProvince(result);
-      console.log(grouped);
+
+      const mostDeaths = stateWithMostDeaths(grouped);
+      const leastDeaths = stateWithLeastDeaths(grouped);
     }
   );
 })();
